@@ -1,3 +1,4 @@
+import { Redis } from "ioredis";
 import { createLogger } from "@delegolabs/utils";
 import { randomUUID } from "crypto";
 import {
@@ -16,13 +17,12 @@ import {
   type TrackedPushSubscription,
 } from "../push/index.js";
 import { checkAndMarkDispatched } from "./idempotency.js";
-import { getDispatcherClient } from "./redis/client.js";
 
 const log = createLogger(
   "notifications:dispatcher",
   process.env.LOG_LEVEL ?? "info"
 );
-const redis = getDispatcherClient();
+const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379", { lazyConnect: true });
 
 const SUBSCRIPTIONS_NS = "push:subscriptions";
 

@@ -1,5 +1,4 @@
 import { route, type Route } from "@delegolabs/utils";
-import { getSpendSummaryHandler } from "./spendSummary.js";
 import {
   getFunnelMetricsHandler,
   getEngagementMetricsHandler,
@@ -14,12 +13,11 @@ import {
   exportTransactionsCsvHandler,
   exportDataHandler,
   getRevenueMetricsHandler,
-  getMerchantQualityScoreHandler,
   getMerchantSalesHandler,
 } from "./analyticsRoutes.js";
+
 export function registerAnalyticsRoutes(): Route[] {
   return [
-    route("GET", "/api/v1/analytics/spend-summary", getSpendSummaryHandler),
     // Funnel metrics
     route("GET", "/api/v1/analytics/funnel", getFunnelMetricsHandler),
     route("GET", "/api/v1/analytics/engagement", getEngagementMetricsHandler),
@@ -38,11 +36,8 @@ export function registerAnalyticsRoutes(): Route[] {
     // Custom events
     route("POST", "/api/v1/analytics/events", trackCustomEventHandler),
 
-        // Revenue attribution
+    // Revenue attribution
     route("GET", "/api/v1/analytics/revenue", getRevenueMetricsHandler),
-
-    // Merchant reputation (#392)
-    route("GET", "/api/v1/analytics/merchants/:merchantId/quality-score", getMerchantQualityScoreHandler),
 
     // Real-Time Merchant Continuous Aggregates (#377)
     route("GET", "/api/v1/analytics/merchants/:merchantId/sales", getMerchantSalesHandler),

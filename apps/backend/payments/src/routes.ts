@@ -21,7 +21,6 @@ import {
 } from "./webhooks/carrierWebhook.js";
 import { enqueueCarrierEvent } from "./webhooks/carrierQueue.js";
 import { handleDeliveryConfirmation } from "./autoRelease/service.js";
-import { getWebhookIdempotencyKey, runIdempotently } from "./autoRelease/idempotency.js";
 import { EscrowDisputedError, EscrowNotReleasableError } from "./autoRelease/types.js";
 import { registerOracleRoutes } from "./oracle/routes.js";
 import { ContractInvocationError } from "../escrow/errors.js";
@@ -779,15 +778,6 @@ export function registerRoutes(): Route[] {
     // Issue #45 — HMAC-verified delivery-confirmation webhook driving escrow auto-release.
     route("POST", "/escrow/:escrowId/delivery-confirmed", async (req, res, params) => {
       try {
-        const idempotencyKey = getWebhookIdempotencyKey(req.headers["x-idempotency-key"]);
-        if (!idempotencyKey) {
-          json(res, 400, {
-            data: null,
-            error: { code: "IDEMPOTENCY_KEY_REQUIRED", message: "X-Idempotency-Key header is required" },
-          });
-          return;
-        }
-
         const rawBody = await readRawBody(req);
 
         const secret = getWebhookSecret();
@@ -825,16 +815,14 @@ export function registerRoutes(): Route[] {
           return;
         }
 
-        const response = await runIdempotently(
-          `delivery-confirmed:${params.escrowId}:${idempotencyKey}`,
-          async () => {
-            const result = await handleDeliveryConfirmation(validated.value, signatureHeader);
-            if ("scheduled" in result) return { status: 202, body: { data: result, error: null } };
-            return { status: result.success ? 200 : 502, body: { data: result, error: null } };
-          },
-        );
+        const result = await handleDeliveryConfirmation(validated.value, signatureHeader);
 
-        json(res, response.status, response.body);
+        if ("scheduled" in result) {
+          json(res, 202, { data: result, error: null });
+          return;
+        }
+
+        json(res, result.success ? 200 : 502, { data: result, error: null });
       } catch (err) {
         if (err instanceof EscrowDisputedError) {
           json(res, 409, { data: null, error: { code: "ESCROW_DISPUTED", message: err.message } });

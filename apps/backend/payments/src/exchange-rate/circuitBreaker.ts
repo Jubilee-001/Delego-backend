@@ -15,7 +15,7 @@ export interface OracleClient {
   fetchRate(baseCurrency: string, quoteCurrency: string): Promise<number>;
 }
 
-export type CircuitState = 'closed' | 'open' | 'half-open';
+extype CircuitState = 'closed' | 'open' | 'half-open';
 
 export interface CircuitBreakerOptions {
   failureThreshold?: number;
