@@ -8,8 +8,6 @@ import {
 } from "./traceContext.js";
 import { getGlobalTracer } from "./tracer.js";
 import type { TracingSpanContext } from "./types.js";
-import { CORRELATION_ID_HEADER } from "../correlation.js";
-import { getLogContext } from "../logger.js";
 
 type HeaderBag = Record<string, string | string[] | undefined>;
 
@@ -38,20 +36,14 @@ export function injectPubSubHeaders(headers: Record<string, string> = {}): Recor
  */
 export async function tracedFetch(input: string | URL, init: RequestInit = {}): Promise<Response> {
   const tracer = getGlobalTracer();
-  const correlationId = getLogContext().correlationId;
-  if (!tracer && !correlationId) return fetch(input, init);
+  if (!tracer) return fetch(input, init);
 
   const url = new URL(input.toString());
   const method = (init.method ?? "GET").toUpperCase();
-  const headers = new Headers(init.headers);
-  if (correlationId) headers.set(CORRELATION_ID_HEADER, correlationId);
-  if (!tracer) return fetch(input, { ...init, headers });
-
   return tracer.withSpan(
     `HTTP ${method}`,
     async (span) => {
       const headers = new Headers(init.headers);
-      if (correlationId) headers.set(CORRELATION_ID_HEADER, correlationId);
       headers.set(TRACEPARENT_HEADER, formatTraceparent(span.context));
       const res = await fetch(input, { ...init, headers });
       span.setAttribute("http.status_code", res.status);

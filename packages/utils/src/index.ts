@@ -5,7 +5,6 @@ export {
   type Logger,
   type LogContext,
 } from "./logger.js";
-export { CORRELATION_ID_HEADER, correlationMiddleware, fetchWithCorrelation } from "./correlation.js";
 export { stroopsToDisplay, displayToStroops } from "./currency.js";
 export {
   generateId,

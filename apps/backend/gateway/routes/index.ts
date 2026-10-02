@@ -113,17 +113,11 @@ import { registerStorefrontRoutes } from "./storefront.js";
 import { updateMerchantProfileHandler } from "./merchantProfile.js";
 import { registerStorageRoutes } from "./storage.js";
 import { registerDisputeRoutes } from "./disputes.js";
-import { searchProductsHandler, embeddingCacheMetricsHandler } from "../src/search/routes.js";
+import { searchProductsHandler } from "../src/search/routes.js";
 import { registerMerchantRoutes } from "../src/merchant/routes.js";
 import { registerCatalogRoutes } from "../src/catalog/routes.js";
 import { registerAgentChatRoutes } from "./agentChat.js";
 import { registerMetricsRoutes } from "../src/metrics.js";
-import {
-  dbSlaStatusHandler,
-  dbSlowQueriesHandler,
-  dbMetricsConfigHandler,
-  dbPrometheusMetricsHandler,
-} from "../src/metrics/dbRoutes.js";
 /** Register all gateway routes */
 export function registerRoutes(): Route[] {
   return [
@@ -173,11 +167,6 @@ export function registerRoutes(): Route[] {
     ),
     // Admin — circuit breaker status (#364)
     route("GET", "/api/v1/admin/circuit-breakers", circuitBreakerStatusHandler),
-    // Database query latency SLA metrics (#387)
-    route("GET", "/api/v1/metrics/db/sla", dbSlaStatusHandler),
-    route("GET", "/api/v1/metrics/db/slow-queries", dbSlowQueriesHandler),
-    route("GET", "/api/v1/metrics/db/config", dbMetricsConfigHandler),
-    route("GET", "/api/v1/metrics/db/prometheus", dbPrometheusMetricsHandler),
     // Request/response logging (#151)
     route("GET", "/api/v1/admin/logs", logSearchHandler),
     route("GET", "/api/v1/admin/logs/stats", logStatsHandler),
@@ -251,8 +240,6 @@ export function registerRoutes(): Route[] {
     route("GET", "/api/docs/openapi.json", swaggerHandler),
     // Semantic product search (#263)
     route("POST", "/api/v1/search/products", searchProductsHandler),
-    // Embedding cache metrics (#389)
-    route("GET", "/api/v1/search/embedding-cache/metrics", embeddingCacheMetricsHandler),
     // Issue #299 — Delivery Oracle Health Check & Heartbeat Monitor
     route("GET", "/health/oracle", oracleHealthHandler),
     // Workflow template system

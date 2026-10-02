@@ -14,7 +14,6 @@ import { CohortAnalysis } from "./models/CohortAnalysis.js";
 import { RevenueAttribution } from "./models/RevenueAttribution.js";
 import { CustomEvent } from "./models/CustomEvent.js";
 import { DataExportLog } from "./models/DataExportLog.js";
-import { startSpendMetricsAggregator } from "./metrics/aggregator.js";
 
 const SERVICE_NAME = "analytics";
 const DEFAULT_PORT = 3012;
@@ -36,11 +35,9 @@ DataExportLog;
 log.info("Starting analytics service", { port, nodeEnv });
 
 // Connect to database before starting server
-let spendMetricsWorker: ReturnType<typeof startSpendMetricsAggregator> | undefined;
 connectDb()
   .then(() => {
     log.info("Database connected, starting server");
-    spendMetricsWorker = startSpendMetricsAggregator();
     startHttpServer({
       port,
       serviceName: SERVICE_NAME,
@@ -53,11 +50,8 @@ connectDb()
   });
 
 // Graceful shutdown
-async function shutdown(): Promise<void> {
-  log.info("Shutting down gracefully");
-  await spendMetricsWorker?.stop();
+process.on("SIGTERM", async () => {
+  log.info("Received SIGTERM, shutting down gracefully");
   await sequelize.close();
   process.exit(0);
-}
-process.once("SIGTERM", shutdown);
-process.once("SIGINT", shutdown);
+});
